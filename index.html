@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>eggo 圆形屏幕原型</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --shell: #141414;
+      --shell-hi: #242018;
+      --glass: rgba(255, 255, 255, 0.08);
+      --line: rgba(255, 255, 255, 0.16);
+      --text: #fff8e8;
+      --muted: rgba(255, 248, 232, 0.58);
+      --egg: #ffbd34;
+      --mint: #51dda2;
+      --cyan: #30d4e8;
+      --coral: #ff7162;
+      --violet: #8d77ff;
+      --diameter: min(82vw, 390px);
+      font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+      background:
+        radial-gradient(circle at 24% 16%, rgba(255, 189, 52, 0.18), transparent 25%),
+        radial-gradient(circle at 79% 72%, rgba(48, 212, 232, 0.13), transparent 29%),
+        linear-gradient(145deg, #0b0c0d 0%, #15120e 48%, #080909 100%);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      padding: 22px;
+    }
+
+    .workbench {
+      width: min(100%, 680px);
+      display: grid;
+      place-items: center;
+      gap: 18px;
+    }
+
+    .device {
+      position: relative;
+      width: calc(var(--diameter) + 42px);
+      height: calc(var(--diameter) + 42px);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(145deg, #29251c 0%, var(--shell) 39%, #050505 100%);
+      box-shadow:
+        0 42px 92px rgba(0, 0, 0, 0.58),
+        inset 0 4px 12px rgba(255, 255, 255, 0.08),
+        inset 0 -20px 34px rgba(0, 0, 0, 0.46);
+    }
+
+    .device::before {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 189, 52, 0.38);
+      box-shadow:
+        0 0 26px rgba(255, 189, 52, 0.12),
+        inset 0 0 42px rgba(0, 0, 0, 0.48);
+      pointer-events: none;
+    }
+
+    .device::after {
+      content: "";
+      position: absolute;
+      width: 90px;
+      height: 9px;
+      top: 19px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, rgba(255, 189, 52, 0.86), transparent);
+      filter: blur(0.2px);
+      pointer-events: none;
+    }
+
+    .screen {
+      position: relative;
+      width: var(--diameter);
+      height: var(--diameter);
+      border-radius: 50%;
+      overflow: hidden;
+      isolation: isolate;
+      background: #070908;
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        inset 0 0 48px rgba(0, 0, 0, 0.72);
+      touch-action: pan-y;
+      user-select: none;
+    }
+
+    .screen::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      border-radius: 50%;
+      background:
+        linear-gradient(115deg, rgba(255, 255, 255, 0.16), transparent 24%),
+        radial-gradient(circle at 50% 4%, rgba(255, 255, 255, 0.16), transparent 28%);
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .screen::after {
+      content: "";
+      position: absolute;
+      inset: 9px;
+      z-index: 7;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      pointer-events: none;
+    }
+
+    .orbit {
+      position: absolute;
+      inset: 11px;
+      z-index: 2;
+      border-radius: 50%;
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      mask-image: conic-gradient(from -18deg, #000 0 268deg, transparent 268deg 360deg);
+      pointer-events: none;
+    }
+
+    .slides {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: flex;
+      width: 500%;
+      height: 100%;
+      transform: translate3d(calc(var(--active, 0) * -20%), 0, 0);
+      transition: transform 520ms cubic-bezier(0.2, 0.84, 0.18, 1);
+    }
+
+    .slide {
+      position: relative;
+      flex: 0 0 20%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 34px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 43%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 30%),
+        radial-gradient(circle at 72% 70%, color-mix(in srgb, var(--accent-2) 14%, transparent), transparent 26%),
+        linear-gradient(160deg, var(--bg-a), var(--bg-b));
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      width: 230px;
+      height: 230px;
+      border-radius: 50%;
+      border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+      transform: rotate(16deg);
+      opacity: 0.72;
+    }
+
+    .slide::after {
+      content: "";
+      position: absolute;
+      inset: 58% 14% auto;
+      height: 42px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .ui {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-rows: 34px 1fr 55px;
+      justify-items: center;
+      align-items: center;
+    }
+
+    .topbar,
+    .footbar {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .brand {
+      position: absolute;
+      top: 3px;
+      left: 34px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 18px;
+      line-height: 1;
+      color: rgba(255, 248, 232, 0.78);
+    }
+
+    .counter {
+      position: absolute;
+      top: 4px;
+      right: 36px;
+      font: 600 11px/1 ui-monospace, "SFMono-Regular", Menlo, monospace;
+      color: rgba(255, 248, 232, 0.56);
+    }
+
+    .title {
+      position: absolute;
+      top: 53px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 190px;
+      margin: 0;
+      text-align: center;
+      font-size: clamp(24px, 7.8vw, 34px);
+      line-height: 1.02;
+      letter-spacing: 0;
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.46);
+      white-space: nowrap;
+    }
+
+    .tag {
+      position: absolute;
+      top: 91px;
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 68px;
+      padding: 3px 10px 4px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--accent) 17%, rgba(255, 255, 255, 0.03));
+      border: 1px solid color-mix(in srgb, var(--accent) 42%, transparent);
+      color: color-mix(in srgb, var(--accent) 84%, white);
+      font: 700 9px/1 ui-monospace, "SFMono-Regular", Menlo, monospace;
+      text-align: center;
+    }
+
+    .icon-stage {
+      position: relative;
+      width: 218px;
+      height: 218px;
+      margin-top: 35px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 50% 44%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 48%),
+        radial-gradient(circle at 50% 55%, rgba(255, 255, 255, 0.07), transparent 58%);
+      border: 1px solid color-mix(in srgb, var(--accent) 28%, rgba(255, 255, 255, 0.08));
+      box-shadow:
+        0 0 34px color-mix(in srgb, var(--accent) 26%, transparent),
+        inset 0 0 28px rgba(0, 0, 0, 0.28);
+    }
+
+    .icon-stage img {
+      width: 202px;
+      height: 202px;
+      object-fit: contain;
+      border-radius: 0;
+      filter:
+        drop-shadow(0 17px 18px rgba(0, 0, 0, 0.34))
+        drop-shadow(0 0 18px color-mix(in srgb, var(--accent) 28%, transparent));
+      -webkit-user-drag: none;
+    }
+
+    .tick {
+      position: absolute;
+      bottom: 56px;
+      width: 74px;
+      height: 7px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.68;
+    }
+
+    .dots {
+      position: absolute;
+      bottom: 31px;
+      left: 50%;
+      display: flex;
+      gap: 8px;
+      transform: translateX(-50%);
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 248, 232, 0.28);
+      transition: width 260ms ease, background-color 260ms ease;
+    }
+
+    .dot.is-active {
+      width: 21px;
+      background: var(--accent);
+    }
+
+    .nav {
+      position: absolute;
+      z-index: 8;
+      top: 50%;
+      width: 40px;
+      height: 52px;
+      transform: translateY(-50%);
+      border: 1px solid color-mix(in srgb, var(--active-color, var(--egg)) 40%, transparent);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.055);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 0;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: transform 180ms ease, background-color 180ms ease;
+    }
+
+    .nav:hover {
+      background: rgba(255, 255, 255, 0.10);
+    }
+
+    .nav:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+
+    .nav svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 2.5;
+    }
+
+    .nav.prev {
+      left: 20px;
+    }
+
+    .nav.next {
+      right: 20px;
+    }
+
+    @media (max-width: 460px) {
+      body {
+        padding: 12px;
+      }
+
+      .device {
+        width: calc(var(--diameter) + 28px);
+        height: calc(var(--diameter) + 28px);
+      }
+
+      .brand {
+        left: 30px;
+      }
+
+      .counter {
+        right: 32px;
+      }
+
+      .title {
+        top: 49px;
+        font-size: 27px;
+      }
+
+      .tag {
+        top: 84px;
+      }
+
+      .icon-stage {
+        width: 184px;
+        height: 184px;
+      }
+
+      .icon-stage img {
+        width: 170px;
+        height: 170px;
+      }
+
+      .nav {
+        width: 36px;
+        height: 48px;
+      }
+
+      .nav.prev {
+        left: 15px;
+      }
+
+      .nav.next {
+        right: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="workbench" aria-label="eggo 圆形屏幕交互原型">
+    <section class="device" aria-label="圆形屏幕设备外观">
+      <div class="screen" id="screen" tabindex="0" aria-live="polite">
+        <div class="orbit"></div>
+        <div class="slides" id="slides">
+          <article class="slide" style="--accent:#ffbd34;--accent-2:#51dda2;--bg-a:#10130f;--bg-b:#070907" data-name="我的萌宠">
+            <div class="ui">
+              <div class="topbar"><span class="brand">eggo</span><span class="counter">1/5</span></div>
+              <h1 class="title">我的萌宠</h1>
+              <div class="tag">PET</div>
+              <div class="icon-stage"><img src="assets_cutout/我的萌宠.png" alt="我的萌宠"></div>
+              <div class="tick"></div>
+            </div>
+          </article>
+          <article class="slide" style="--accent:#26d6bd;--accent-2:#67a5ff;--bg-a:#0c1214;--bg-b:#060909" data-name="赛博树洞">
+            <div class="ui">
+              <div class="topbar"><span class="brand">eggo</span><span class="counter">2/5</span></div>
+              <h1 class="title">赛博树洞</h1>
+              <div class="tag">VOID</div>
+              <div class="icon-stage"><img src="assets_cutout/赛博树洞.png" alt="赛博树洞"></div>
+              <div class="tick"></div>
+            </div>
+          </article>
+          <article class="slide" style="--accent:#8d77ff;--accent-2:#30d4e8;--bg-a:#111022;--bg-b:#08080e" data-name="量子决策">
+            <div class="ui">
+              <div class="topbar"><span class="brand">eggo</span><span class="counter">3/5</span></div>
+              <h1 class="title">量子决策</h1>
+              <div class="tag">CHOICE</div>
+              <div class="icon-stage"><img src="assets_cutout/量子决策.png" alt="量子决策"></div>
+              <div class="tick"></div>
+            </div>
+          </article>
+          <article class="slide" style="--accent:#ff7162;--accent-2:#ffd05b;--bg-a:#1b0e0b;--bg-b:#090706" data-name="幸运预测">
+            <div class="ui">
+              <div class="topbar"><span class="brand">eggo</span><span class="counter">4/5</span></div>
+              <h1 class="title">幸运预测</h1>
+              <div class="tag">LUCK</div>
+              <div class="icon-stage"><img src="assets_cutout/幸运预测.png" alt="幸运预测"></div>
+              <div class="tick"></div>
+            </div>
+          </article>
+          <article class="slide" style="--accent:#b7c0ca;--accent-2:#42d4b0;--bg-a:#111417;--bg-b:#070808" data-name="设置">
+            <div class="ui">
+              <div class="topbar"><span class="brand">eggo</span><span class="counter">5/5</span></div>
+              <h1 class="title">设置</h1>
+              <div class="tag">SET</div>
+              <div class="icon-stage"><img src="assets_cutout/设置.png" alt="设置"></div>
+              <div class="tick"></div>
+            </div>
+          </article>
+        </div>
+        <button class="nav prev" type="button" aria-label="上一项">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M15 6 9 12l6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="nav next" type="button" aria-label="下一项">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m9 6 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="dots" id="dots" aria-hidden="true"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const screen = document.getElementById("screen");
+    const slides = document.getElementById("slides");
+    const dots = document.getElementById("dots");
+    const prevButton = document.querySelector(".nav.prev");
+    const nextButton = document.querySelector(".nav.next");
+    const slideItems = [...document.querySelectorAll(".slide")];
+    const accents = ["#ffbd34", "#26d6bd", "#8d77ff", "#ff7162", "#b7c0ca"];
+    let active = 0;
+    let startX = 0;
+    let currentX = 0;
+    let dragging = false;
+
+    slideItems.forEach((_, index) => {
+      const dot = document.createElement("span");
+      dot.className = "dot";
+      dot.addEventListener("click", () => setActive(index));
+      dots.appendChild(dot);
+    });
+
+    function setActive(index) {
+      active = (index + slideItems.length) % slideItems.length;
+      slides.style.setProperty("--active", active);
+      screen.style.setProperty("--active-color", accents[active]);
+      [...dots.children].forEach((dot, dotIndex) => {
+        dot.classList.toggle("is-active", dotIndex === active);
+      });
+      screen.setAttribute("aria-label", `当前功能：${slideItems[active].dataset.name}`);
+    }
+
+    function move(step) {
+      setActive(active + step);
+    }
+
+    prevButton.addEventListener("click", () => move(-1));
+    nextButton.addEventListener("click", () => move(1));
+
+    screen.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      startX = event.clientX;
+      currentX = startX;
+      screen.setPointerCapture(event.pointerId);
+    });
+
+    screen.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+      currentX = event.clientX;
+    });
+
+    screen.addEventListener("pointerup", () => {
+      if (!dragging) return;
+      dragging = false;
+      const delta = currentX - startX;
+      if (Math.abs(delta) > 34) {
+        move(delta < 0 ? 1 : -1);
+      }
+    });
+
+    screen.addEventListener("wheel", (event) => {
+      if (Math.abs(event.deltaX) < 18 && Math.abs(event.deltaY) < 18) return;
+      event.preventDefault();
+      move((Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY) > 0 ? 1 : -1);
+    }, { passive: false });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") move(-1);
+      if (event.key === "ArrowRight") move(1);
+    });
+
+    setActive(0);
+  </script>
+</body>
+</html>
